@@ -52,7 +52,6 @@ define mongodb::mongod (
       mode    => '0700',
       owner   => $mongodb::params::run_as_user,
       require => Class['mongodb::install'],
-      notify  => Service["mongod_${mongod_instance}"],
     }
   }
 
@@ -63,11 +62,11 @@ define mongodb::mongod (
       hasstatus  => true,
       hasrestart => true,
       require    => [
-        File[
-          "/etc/mongod_${mongod_instance}.conf",
-          "/etc/init.d/mongod_${mongod_instance}"],
-        Service[$::mongodb::old_servicename]],
-      before     => Anchor['mongodb::end']
+        File["/etc/init.d/mongod_${mongod_instance}"],
+        Service[$::mongodb::old_servicename]
+      ],
+      subscribe  => File["/etc/mongod_${mongod_instance}.conf"],
+      before     => Anchor['mongodb::end'],
     }
   }
 }
