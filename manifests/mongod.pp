@@ -16,6 +16,7 @@ define mongodb::mongod (
   $mongod_monit                           = false,
   $mongod_add_options                     = [],
   $mongod_deactivate_transparent_hugepage = false,
+  $mongod_manage_service                  = true,
 ) {
 
   file {
@@ -55,17 +56,18 @@ define mongodb::mongod (
     }
   }
 
-  service { "mongod_${mongod_instance}":
-    ensure     => $mongod_running,
-    enable     => $mongod_enable,
-    hasstatus  => true,
-    hasrestart => true,
-    require    => [
-      File[
-        "/etc/mongod_${mongod_instance}.conf",
-        "/etc/init.d/mongod_${mongod_instance}"],
-      Service[$::mongodb::old_servicename]],
-    before     => Anchor['mongodb::end']
+  if $mongod_manage_service {
+    service { "mongod_${mongod_instance}":
+      ensure     => $mongod_running,
+      enable     => $mongod_enable,
+      hasstatus  => true,
+      hasrestart => true,
+      require    => [
+        File[
+          "/etc/mongod_${mongod_instance}.conf",
+          "/etc/init.d/mongod_${mongod_instance}"],
+        Service[$::mongodb::old_servicename]],
+      before     => Anchor['mongodb::end']
+    }
   }
-
 }
