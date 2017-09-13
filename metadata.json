@@ -18,17 +18,13 @@
   ],
   "requirements": [
     {
-      "name": "pe",
-      "version_requirement": "3.x"
-    },
-    {
       "name": "puppet",
-      "version_requirement": ">=2.7.20 <4.0.0"
+      "version_requirement": ">=3.7.0 <5.0.0"
     }
   ],
   "name": "dwerder-mongodb",
   "version": "3.5.0",
-  "source": "git clone https://github.com/echocat/puppet-mongodb.git",
+  "source": "https://github.com/echocat/puppet-mongodb.git",
   "author": "echocat / Daniel Werdermann",
   "license": "Apache-2.0",
   "summary": "MongoDB module with sharding",
@@ -36,7 +32,8 @@
   "issues_url": "https://github.com/echocat/puppet-mongodb/issues",
   "dependencies": [
     {"name":"puppetlabs/stdlib","version_requirement":">= 3.2.0"},
-    {"name":"puppetlabs/apt","version_requirement":">= 1.1.0"},
-    {"name":"rodjek/logrotate","version_requirement":">= 1.1.1"}
+    {"name":"puppetlabs/apt","version_requirement":">=2.0.0 <4.0.0"},
+    {"name":"puppet/logrotate","version_requirement":">= 1.4.0 <2.0.0"}
   ]
 }
+

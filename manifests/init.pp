@@ -1,6 +1,7 @@
 # == Class: mongodb
 #
 class mongodb (
+  $systemd_os               = $mongodb::params::systemd_os,
   $dbdir                    = $mongodb::params::dbdir,
   $pidfilepath              = $mongodb::params::pidfilepath,
   $logdir                   = $mongodb::params::logdir,
@@ -13,16 +14,13 @@ class mongodb (
   $ulimit_nproc             = $mongodb::params::ulimit_nproc,
   $run_as_user              = $mongodb::params::run_as_user,
   $run_as_group             = $mongodb::params::run_as_group,
-  $old_servicename          = $mongodb::params::old_servicename
+  $old_servicename          = $mongodb::params::old_servicename,
+  $use_yamlconfig           = $mongodb::params::use_yamlconfig,
+  $use_enterprise           = $mongodb::params::use_enterprise,
 ) inherits mongodb::params {
 
   anchor { 'mongodb::begin': before => Anchor['mongodb::install::begin'], }
   anchor { 'mongodb::end': }
-
-  class { 'mongodb::logrotate':
-    require => Anchor['mongodb::install::end'],
-    before  => Anchor['mongodb::end'],
-  }
 
   case $::osfamily {
     /(?i)(Debian|RedHat)/ : {
@@ -33,15 +31,9 @@ class mongodb (
     }
   }
 
-  # stop and disable default mongod
-
-  service { $::mongodb::old_servicename:
-    ensure     => stopped,
-    enable     => false,
-    hasstatus  => true,
-    hasrestart => true,
-    subscribe  => Package['mongodb-10gen'],
-    before     => Anchor['mongodb::end'],
+  class { 'mongodb::logrotate':
+    require => Anchor['mongodb::install::end'],
+    before  => Anchor['mongodb::end'],
   }
 
   # remove not wanted startup script, because it would kill all mongod
@@ -49,10 +41,20 @@ class mongodb (
 
   file { "/etc/init.d/${::mongodb::old_servicename}":
     ensure  => file,
-    content => template("${module_name}/replacement_mongod-init.conf.erb"),
-    require => Service[$::mongodb::old_servicename],
+    content => template("${module_name}/init.d/replacement_mongod.conf.erb"),
     mode    => '0755',
     before  => Anchor['mongodb::end'],
+  }
+
+  # stop and disable default mongod
+  service { $::mongodb::old_servicename:
+    ensure     => stopped,
+    enable     => false,
+    hasstatus  => true,
+    hasrestart => true,
+    subscribe  => Package['mongodb-package'],
+    require    => File["/etc/init.d/${::mongodb::old_servicename}"],
+    before     => Anchor['mongodb::end'],
   }
 
   mongodb::limits::conf {
@@ -77,5 +79,7 @@ class mongodb (
       value => $::mongodb::ulimit_nproc;
   }
 
-}
+  # ordering resources application
 
+  Mongodb::Mongod<| |> -> Mongodb::Mongos<| |>
+}

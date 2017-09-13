@@ -21,7 +21,7 @@
 # Suite 330, Boston, MA 02111-1307 USA
 #
 ### BEGIN INIT INFO
-# Provides:          mongod_<%= @mongod_instance %>
+# Provides:          mongod_<%= @mongos_instance %>
 # Required-Start:    $network $local_fs $remote_fs
 # Required-Stop:     $network $local_fs $remote_fs
 # Should-Start:      $named
@@ -48,29 +48,17 @@
 ### END INIT INFO
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=/usr/bin/mongod
+DAEMON=/usr/bin/mongos
 DESC=database
 
-NAME=mongodb_<%= @mongod_instance %>
+NAME=mongodb_<%= @mongos_instance %>
 # Defaults.  Can be overridden by the /etc/default/$NAME
 # Other configuration options are located in $CONF file. See here for more:
 # http://docs.mongodb.org/manual/reference/configuration-options/
-CONF="/etc/mongod_<%= @mongod_instance %>.conf"
-DBPATH=`awk -F= '/^dbpath=/{print $2}' "$CONF"`
-PIDFILE=<%= scope.lookupvar('mongodb::pidfilepath') %>/mongod_<%= @mongod_instance %>/mongod.pid
+CONF="/etc/mongos_<%= @mongos_instance %>.conf"
+PIDFILE="<%= scope.lookupvar('mongodb::pidfilepath') %>/mongos_<%= @mongos_instance %>/mongos.pid"
+DBPATH=`dirname $PIDFILE`
 ENABLE_MONGODB=yes
-
-# Handle NUMA access to CPUs (SERVER-3574)
-# This verifies the existence of numactl as well as testing that the command works
-NUMACTL_ARGS="--interleave=all"
-if which numactl >/dev/null 2>/dev/null && numactl $NUMACTL_ARGS ls / >/dev/null 2>/dev/null
-then
-    NUMACTL="$(which numactl) -- $NUMACTL_ARGS"
-    DAEMON_DELIMITER=""
-else
-    NUMACTL=""
-    DAEMON_DELIMITER="--"
-fi
 
 if test ! -x $DAEMON; then
     echo "Could not find $DAEMON"
@@ -121,19 +109,10 @@ running() {
 start_server() {
   mkdir -p $DBPATH || exit 5
   chown -R ${DAEMONUSER}:${DAEMONGROUP} $DBPATH
-  <% if @mongod_deactivate_transparent_hugepage -%>
-  # implement mdiag.sh best-practice
-  test -f /sys/kernel/mm/transparent_hugepage/khugepaged/defrag \
-  && echo 0 > /sys/kernel/mm/transparent_hugepage/khugepaged/defrag
-  test -f /sys/kernel/mm/transparent_hugepage/defrag \
-  && echo never > /sys/kernel/mm/transparent_hugepage/defrag
-  test -f /sys/kernel/mm/transparent_hugepage/enabled \
-  && echo never > /sys/kernel/mm/transparent_hugepage/enabled
-  <% end -%>
 # Start the process using the wrapper
             start-stop-daemon --background --start --quiet --pidfile $PIDFILE \
                         --chuid $DAEMONUSER \
-                        --exec $NUMACTL $DAEMON $DAEMON_DELIMITER $DAEMON_OPTS
+                        --exec $NUMACTL $DAEMON -- $DAEMON_OPTS
             errcode=$?
 	return $errcode
 }
