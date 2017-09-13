@@ -108,7 +108,6 @@ define mongodb::mongod (
       mode    => '0700',
       owner   => $mongodb::params::run_as_user,
       require => Class['mongodb::install'],
-      notify  => Service["mongod_${mongod_instance}"],
     }
   }
 
@@ -128,5 +127,4 @@ define mongodb::mongod (
       before     => Anchor['mongodb::end']
     }
   }
-
 }
