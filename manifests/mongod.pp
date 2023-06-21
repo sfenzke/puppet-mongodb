@@ -21,6 +21,9 @@ define mongodb::mongod (
   $mongod_add_options                     = [],
   $mongod_deactivate_transparent_hugepage = false,
   $mongod_manage_service                  = true,
+	$mongod_tls															= false,
+	$mongod_tls_mode												= 'preferTLS',
+	$mongod_tls_certkey_file								= ''
 ) {
 
   $db_specific_dir = "${::mongodb::params::dbdir}/mongod_${mongod_instance}"

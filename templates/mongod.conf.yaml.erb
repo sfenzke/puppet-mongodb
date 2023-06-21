@@ -19,6 +19,11 @@ net:
    http:
      RESTInterfaceEnabled: <%= @mongod_rest %>
 <%- end -%>
+<%- if @mongod_tls != false -%>
+   tls:
+     mode: <%= @mongod_tls_mode %>
+     certificateKeyFile: <%= @mongod_tls_certkey_file %>
+<%- end -%>
 
 security:
 <%- if @mongod_auth != false -%>
